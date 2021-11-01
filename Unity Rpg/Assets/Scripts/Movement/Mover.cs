@@ -1,41 +1,44 @@
-using RPG.Combat;
-using System.Collections;
-using System.Collections.Generic;
+using RPG.Core;
 using UnityEngine;
 using UnityEngine.AI;
 
 namespace RPG.Movement
 {
-    public class Mover : MonoBehaviour
+    public class Mover : MonoBehaviour, IAction
     {
-        [SerializeField]
-        public Transform target;
+        [SerializeField] public Transform target;
+        [SerializeField] float maxSpeed = 6f;
 
         NavMeshAgent navMeshAgent;
+        Health health;
 
         private void Start()
         {
             navMeshAgent = GetComponent<NavMeshAgent>();
+            health = GetComponent<Health>();
         }
 
         void Update()
         {
+            navMeshAgent.enabled = !health.IsDead();
+
             UpdateAnimator();
         }
 
-        public void StartMoveAction(Vector3 destination)
+        public void StartMoveAction(Vector3 destination, float speedFraction)
         {
-            GetComponent<Fighter>().Cancel();
-            MoveTo(destination);
+            GetComponent<ActionScheduler>().StartAction(this);
+            MoveTo(destination, speedFraction);
         }
 
-        public void MoveTo(Vector3 destination)
+        public void MoveTo(Vector3 destination, float speedFraction)
         {
             navMeshAgent.destination = destination;
+            navMeshAgent.speed = maxSpeed * Mathf.Clamp01(speedFraction);
             navMeshAgent.isStopped = false;
         }
 
-        public void Stop()
+        public void Cancel()
         {
             navMeshAgent.isStopped = true;
         }
